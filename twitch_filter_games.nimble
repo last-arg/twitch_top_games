@@ -1,11 +1,12 @@
 # Package
 
-version       = "0.1.0"
-author        = "last_arg"
-description   = "A new awesome nimble package"
-license       = "MIT"
-srcDir        = "src"
-bin           = @["twitch_filter_games"]
+version = "0.1.0"
+author = "last_arg"
+description = "A new awesome nimble package"
+license = "MIT"
+srcDir = "src"
+binDir = "bin"
+bin = @["twitch_filter_games"]
 
 
 # Dependencies
