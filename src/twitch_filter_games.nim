@@ -68,7 +68,6 @@ proc fetchGames(client_id: string, token: string): Future[seq[Game]] {.async.} =
   return games
 
 proc asyncMain(): Future[void] {.async.} =
-  # TODO: add TWITCH_CLIENT_ID env var 
   let client_id = getEnv("TWITCH_CLIENT_ID")
   if client_id.len == 0:
     echo "No environment variable TWITCH_CLIENT_ID found"
