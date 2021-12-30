@@ -17,20 +17,14 @@ type
     id: string
     name: string
 
-const twitch_client_id = "7v5r973dmjp0nd1g43b8hcocj2airz"
-
-proc requestAccessToken(): Future[string] {.async.} =
-  let client_secret = getEnv("TWITCH_CLIENT_SECRET")
-  if client_secret.len == 0:
-    echo "No environment variable TWITCH_CLIENT_SECRET found"
-    return
+proc requestAccessToken(client_id: string, client_secret: string): Future[string] {.async.} =
   var client = newAsyncHttpClient()
   client.headers = newHttpHeaders({
      "Host": "id.twitch.tv",
      "Connection": "close",
      "Accept": "application/vnd.twitchtv.v5+json"
   })
-  let url = &"https://id.twitch.tv/oauth2/token?client_id=7v5r973dmjp0nd1g43b8hcocj2airz&client_secret={client_secret}&grant_type=client_credentials"
+  let url = &"https://id.twitch.tv/oauth2/token?client_id={client_id}&client_secret={client_secret}&grant_type=client_credentials"
   let r = await client.post(url)
   if not r.status.startsWith("200"):
     echo &"Http request returned invalid status code: {r.status}"
@@ -45,7 +39,7 @@ proc requestAccessToken(): Future[string] {.async.} =
   client.close()
   return access_token
 
-proc fetchGames(token: string): Future[seq[Game]] {.async.} =
+proc fetchGames(client_id: string, token: string): Future[seq[Game]] {.async.} =
   var games: seq[Game] = @[]
   var client = newAsyncHttpClient()
   client.headers = newHttpHeaders({
@@ -53,7 +47,7 @@ proc fetchGames(token: string): Future[seq[Game]] {.async.} =
     "Connection": "close",
     "Authorization": &"Bearer {token}",
     "Accept": "application/vnd.twitchtv.v5+json",
-    "Client-Id": twitch_client_id
+    "Client-Id": client_id
   })
   var cursor = ""
   while true:
@@ -74,15 +68,26 @@ proc fetchGames(token: string): Future[seq[Game]] {.async.} =
   return games
 
 proc asyncMain(): Future[void] {.async.} =
-  let access_token = await requestAccessToken()
+  # TODO: add TWITCH_CLIENT_ID env var 
+  let client_id = getEnv("TWITCH_CLIENT_ID")
+  if client_id.len == 0:
+    echo "No environment variable TWITCH_CLIENT_ID found"
+    return
+  let client_secret = getEnv("TWITCH_CLIENT_SECRET")
+  if client_secret.len == 0:
+    echo "No environment variable TWITCH_CLIENT_SECRET found"
+    return
+
+  echo "Getting twitch access token"
+  let access_token = await requestAccessToken(client_id, client_secret)
   # echo &"Token: {access_token}"
 
   if access_token.len == 0:
-    echo "Could get make access token. Make sure you have set enviroment variable TWITCH_CLIENT_SECRET"
+    echo "Failed to get access token. Make sure environment variables TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET are correct"
     return
 
   echo "Downloading all top games"
-  let games = await fetchGames(access_token)
+  let games = await fetchGames(client_id, access_token)
   echo &"Number of games: {games.len}"
   let json_content = %*{"data": games}
   let f = open("dist/top_games_list.json", fmReadWrite)
