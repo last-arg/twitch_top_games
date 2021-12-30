@@ -1,7 +1,7 @@
-# Generate Twitch games
+# Twitch top games
 Get currently all available twitch top games.
 
-# Motivation
+## Motivation
 Thought that was going to need for another project. But this will only get currently live games/categories. I would have needed all the games/categories on twitch.
 
 ## Usage:
