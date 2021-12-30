@@ -2,7 +2,7 @@
 
 version = "0.1.0"
 author = "last_arg"
-description = "A new awesome nimble package"
+description = "Get currently all available twitch top games"
 license = "MIT"
 srcDir = "src"
 binDir = "bin"

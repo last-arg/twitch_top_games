@@ -1,5 +1,5 @@
 # Generate Twitch games
-Get all top games (have atleast one viewer) using twitch API.
+Get currently all available twitch top games.
 
 # Motivation
 Thought that was going to need for another project. But this will only get currently live games/categories. I would have needed all the games/categories on twitch.
