@@ -1,6 +1,5 @@
 import asyncdispatch, httpclient, json, os, strformat, strutils, options
 
-
 type
   Game = ref object
     id: string
@@ -20,7 +19,7 @@ type
 
 const twitch_client_id = "7v5r973dmjp0nd1g43b8hcocj2airz"
 
-proc getAccessToken(): Future[string] {.async.} =
+proc requestAccessToken(): Future[string] {.async.} =
   let client_secret = getEnv("TWITCH_CLIENT_SECRET")
   if client_secret.len == 0:
     echo "No environment variable TWITCH_CLIENT_SECRET found"
@@ -75,35 +74,27 @@ proc fetchGames(token: string): Future[seq[Game]] {.async.} =
   return games
 
 proc asyncMain(): Future[void] {.async.} =
-  const token_file = "tmp/twitch_access_token.txt"
-  var access_token = ""
-  if fileExists(token_file):
-    let f = open(token_file)
-    access_token = f.readAll().strip()
-    f.close()
+  let access_token = await requestAccessToken()
+  # echo &"Token: {access_token}"
 
   if access_token.len == 0:
-    echo "Getting access token"
-    access_token = await getAccessToken()
-    let f = open(token_file, fmReadWrite)
-    f.write(access_token)
-    f.close()
+    echo "Could get make access token. Make sure you have set enviroment variable TWITCH_CLIENT_SECRET"
+    return
 
-  echo &"Token: {access_token}"
-
+  echo "Downloading all top games"
   let games = await fetchGames(access_token)
   echo &"Number of games: {games.len}"
   let json_content = %*{"data": games}
   let f = open("dist/top_games_list.json", fmReadWrite)
   f.write($json_content)
   f.close()
-  echo &"Wrote 'dist/top_games_list.json'"
+  echo &"Generated 'dist/top_games_list.json'"
 
   let f_small = open("dist/top_games_list_small.json", fmReadWrite)
   let games_small = cast[seq[GameTrimmed]](games)
   let json_content_small = %*{"data": games_small}
   f_small.write($json_content_small)
   f_small.close()
-  echo &"Wrote 'dist/top_games_list_small.json'"
+  echo &"Generated 'dist/top_games_list_small.json'"
 
 waitFor asyncMain()
